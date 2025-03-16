@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background: #000;
+            display: block;
+            margin: auto;
+        }
+        #startButton, #restartButton, #difficultySelect, #languageSelect {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #gameOverScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            padding-top: 200px;
+        }
+        #score {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+        #dpad {
+            position: fixed;
+            top: 50%;
+            right: 100px;
+            transform: translateY(-50%);
+            width: 150px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dpad-row {
+            display: flex;
+            justify-content: center;
+        }
+        .dpad-btn {
+            width: 50px;
+            height: 50px;
+            background: gray;
+            border: 2px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            margin: 3px;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Snake Game</h1>
+    <div id="score">🍎: 0</div>
+    <canvas id="gameCanvas"></canvas>
+    <br>
+    <button id="startButton">Start Game</button>
+    <div id="gameOverScreen">
+        <p>Game Over!</p>
+        <p id="finalScore"></p>
+        <button id="restartButton">Restart</button>
+    </div>
+
+    <div id="difficultySelect">
+        <label for="difficulty">Select Difficulty: </label>
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+    </div>
+
+    <div id="languageSelect">
+        <label for="language">Select Language: </label>
+        <select id="language">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+        </select>
+    </div>
+
+    <div id="dpad">
+        <div class="dpad-row">
+            <div class="dpad-btn" id="upBtn">↑</div>
+        </div>
+        <div class="dpad-row">
+            <div class="dpad-btn" id="leftBtn">←</div>
+            <div style="width: 50px;"></div>
+            <div class="dpad-btn" id="rightBtn">→</div>
+        </div>
+        <div class="dpad-row">
+            <div class="dpad-btn" id="downBtn">↓</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const startButton = document.getElementById("startButton");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const restartButton = document.getElementById("restartButton");
+        const scoreDisplay = document.getElementById("score");
+        const finalScoreDisplay = document.getElementById("finalScore");
+        const difficultySelect = document.getElementById("difficulty");
+        const languageSelect = document.getElementById("language");
+
+        let snake, direction, food, gameInterval, isGameOver, score;
+        let gameSpeed = 120;
+        const gridSize = 450;
+        const tileSize = 15;
+        const borderMargin = 20;
+        let language = 'en';
+        let isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+            canvas.width = 300;
+            canvas.height = 300;
+        } else {
+            canvas.width = gridSize;
+            canvas.height = gridSize;
+        }
+
+        function getRandomColor() {
+            const colors = ["red", "blue", "yellow", "purple", "orange", "pink", "white"];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function getRandomFoodPosition() {
+            const min = borderMargin / tileSize;
+            const max = (canvas.width - borderMargin) / tileSize;
+            return {
+                x: Math.floor(Math.random() * (max - min) + min) * tileSize,
+                y: Math.floor(Math.random() * (max - min) + min) * tileSize,
+                color: getRandomColor()
+            };
+        }
+
+        function initializeGame() {
+            gameOverScreen.style.display = "none";
+            score = 0;
+            scoreDisplay.textContent = "🍎: " + score;
+            snake = [{ x: 225, y: 225 }];
+            direction = "right";
+            food = getRandomFoodPosition();
+            isGameOver = false;
+            clearInterval(gameInterval);
+        }
+
+        function startGame() {
+            initializeGame();
+            gameInterval = setInterval(gameLoop, gameSpeed);
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = "lime";
+            snake.forEach(segment => ctx.fillRect(segment.x, segment.y, tileSize, tileSize));
+        }
+
+        function drawFood() {
+            ctx.fillStyle = food.color;
+            ctx.fillRect(food.x, food.y, tileSize, tileSize);
+        }
+
+        function updateSnake() {
+            let head = { ...snake[0] };
+            if (direction === "right") head.x += tileSize;
+            else if (direction === "left") head.x -= tileSize;
+            else if (direction === "up") head.y -= tileSize;
+            else if (direction === "down") head.y += tileSize;
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreDisplay.textContent = "🍎: " + score;
+                food = getRandomFoodPosition();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            if (snake[0].x < 0 || snake[0].x >= canvas.width || snake[0].y < 0 || snake[0].y >= canvas.height) {
+                endGame();
+                return;
+            }
+            for (let i = 1; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
+                    endGame();
+                    return;
+                }
+            }
+        }
+
+        function endGame() {
+            if (isGameOver) return;
+            isGameOver = true;
+            clearInterval(gameInterval);
+            setTimeout(() => {
+                finalScoreDisplay.textContent = language === 'en' ? "Final Score: " + score : "最终得分: " + score;
+                gameOverScreen.style.display = "block";
+            }, 500);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawFood();
+            drawSnake();
+            updateSnake();
+            checkCollision();
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "w" && direction !== "down") direction = "up";
+            else if (event.key === "s" && direction !== "up") direction = "down";
+            else if (event.key === "a" && direction !== "right") direction = "left";
+            else if (event.key === "d" && direction !== "left") direction = "right";
+            else if (event.key === "ArrowUp" && direction !== "down") direction = "up";
+            else if (event.key === "ArrowDown" && direction !== "up") direction = "down";
+            else if (event.key === "ArrowLeft" && direction !== "right") direction = "left";
+            else if (event.key === "ArrowRight" && direction !== "left") direction = "right";
+        });
+
+        startButton.addEventListener("click", startGame);
+        restartButton.addEventListener("click", initializeGame);
+
+        document.getElementById("upBtn").addEventListener("click", () => direction = "up");
+        document.getElementById("downBtn").addEventListener("click", () => direction = "down");
+        document.getElementById("leftBtn").addEventListener("click", () => direction = "left");
+        document.getElementById("rightBtn").addEventListener("click", () => direction = "right");
+
+        difficultySelect.addEventListener("change", () => {
+            const difficulty = difficultySelect.value;
+            if (difficulty === 'easy') gameSpeed = 120;
+            else if (difficulty === 'medium') gameSpeed = 90;
+            else if (difficulty === 'hard') gameSpeed = 60;
+            if (!isGameOver) clearInterval(gameInterval);
+            if (!isGameOver) gameInterval = setInterval(gameLoop, gameSpeed);
+        });
+
+        languageSelect.addEventListener("change", () => {
+            language = languageSelect.value;
+            if (language === 'en') {
+                startButton.textContent = "Start Game";
+                restartButton.textContent = "Restart";
+                difficultySelect.previousElementSibling.textContent = "Select Difficulty: ";
+                languageSelect.previousElementSibling.textContent = "Select Language: ";
+                if (isGameOver) finalScoreDisplay.textContent = "Final Score: " + score;
+
+                difficultySelect.querySelector('option[value="easy"]').textContent = "Easy";
+                difficultySelect.querySelector('option[value="medium"]').textContent = "Medium";
+                difficultySelect.querySelector('option[value="hard"]').textContent = "Hard";
+            } else {
+                startButton.textContent = "开始游戏";
+                restartButton.textContent = "重新开始";
+                difficultySelect.previousElementSibling.textContent = "选择难度: ";
+                languageSelect.previousElementSibling.textContent = "选择语言: ";
+                if (isGameOver) finalScoreDisplay.textContent = "最终得分: " + score;
+
+                difficultySelect.querySelector('option[value="easy"]').textContent = "简单";
+                difficultySelect.querySelector('option[value="medium"]').textContent = "中等";
+                difficultySelect.querySelector('option[value="hard"]').textContent = "困难";
+            }
+        });
+    </script>
+    <h1>About Game</h1>
+    <h2>I've made this game for you guys to play when your bored.</h2>
+    <h2>WASD to control the snake eat foods to get longer!</h2>
+    <h2>Have fun!</h2>
+    <h3>        -Noah(Auther of the game)</h3>
+    <h1>关于游戏</h1>
+    <h2>无聊的时候来玩玩呗</h2>
+    <h2>WASD控着蛇吃豆子来变长</h2>
+    <h2>玩的开心！</h2>
+    <h3>            -浩闻(游戏开发员)</h3>
+    <p>支持我-Support Me(捐款-Donate in China only)<a href="https://noah-li2012.github.io/DonateForNoah/" target="_blank">|点我-Click me|</a></p>
+</body>
+</html>

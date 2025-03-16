@@ -14,6 +14,20 @@
             display: block;
             margin: auto;
         }
+        #rotateMessage {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    font-size: 18px;
+    text-align: center;
+    border-radius: 10px;
+}
+
         #startButton, #restartButton, #difficultySelect, #languageSelect {
             margin-top: 10px;
             padding: 10px 20px;
@@ -120,6 +134,10 @@
             <div class="dpad-btn" id="downBtn">↓</div>
         </div>
     </div>
+    <div id="rotateMessage">
+        请旋转您的设备以获得更好的游戏体验。
+    </div>
+
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -147,6 +165,17 @@
             canvas.width = gridSize;
             canvas.height = gridSize;
         }
+        function checkOrientation() {
+    const message = document.getElementById("rotateMessage");
+    if (window.innerHeight > window.innerWidth) {
+        message.style.display = "block";
+    } else {
+        message.style.display = "none";
+    }
+}
+
+window.addEventListener("load", checkOrientation);
+window.addEventListener("resize", checkOrientation);
 
         function getRandomColor() {
             const colors = ["red", "blue", "yellow", "purple", "orange", "pink", "white"];

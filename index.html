@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="https://cdn.jsdelivr.net/gh/Noah-Li2012/snakev2@main/favicon.png" type="image/png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake Game</title>
@@ -181,9 +180,34 @@
         }
 
         function drawSnake() {
-            ctx.fillStyle = "lime";
-            snake.forEach(segment => ctx.fillRect(segment.x, segment.y, tileSize, tileSize));
+    ctx.fillStyle = "lime";
+    snake.forEach((segment, index) => {
+        ctx.fillRect(segment.x, segment.y, tileSize, tileSize);
+
+        if (index === 0) {
+            ctx.fillStyle = "black";
+            let eyeSize = 3;
+            let offset = 4;
+
+            if (direction === "right") {
+                ctx.fillRect(segment.x + tileSize - offset, segment.y + offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x + tileSize - offset, segment.y + tileSize - offset, eyeSize, eyeSize);
+            } else if (direction === "left") {
+                ctx.fillRect(segment.x + offset, segment.y + offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x + offset, segment.y + tileSize - offset, eyeSize, eyeSize);
+            } else if (direction === "up") {
+                ctx.fillRect(segment.x + offset, segment.y + offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x + tileSize - offset, segment.y + offset, eyeSize, eyeSize);
+            } else if (direction === "down") {
+                ctx.fillRect(segment.x + offset, segment.y + tileSize - offset, eyeSize, eyeSize);
+                ctx.fillRect(segment.x + tileSize - offset, segment.y + tileSize - offset, eyeSize, eyeSize);
+            }
+
+            ctx.fillStyle = "lime"; // 还原蛇身颜色
         }
+    });
+}
+
 
         function drawFood() {
             ctx.fillStyle = food.color;
@@ -292,16 +316,17 @@
             }
         });
     </script>
-    <h1>About Game</h1>
-    <h2>I've made this game for you guys to play when your bored.</h2>
-    <h2>WASD to control the snake eat foods to get longer!</h2>
-    <h2>Have fun!</h2>
-    <h3>        -Noah(Auther of the game)</h3>
-    <h1>关于游戏</h1>
-    <h2>无聊的时候来玩玩呗</h2>
-    <h2>WASD控着蛇吃豆子来变长</h2>
-    <h2>玩的开心！</h2>
-    <h3>            -浩闻(游戏开发员)</h3>
+    <h5>About Game</h5>
+    <h6>I've made this game for you guys to play when your bored.</h6>
+    <h6>WASD to control the snake eat foods to get longer!</h6>
+    <h6>Have fun!</h6>
+    <h6>        -Noah(Auther of the game)</h6>
+    <h1>—————————————————————————</h1>
+    <h5>关于游戏</h5>
+    <h6>午休太无聊，贪吃蛇陪你醒醒脑</h6>
+    <h6>WASD控着蛇吃豆子来变长</h6>
+    <h6>玩的开心！</h6>
+    <h6>            -浩闻(游戏开发员)</h6>
     <p>支持我-Support Me(捐款-Donate in China only)<a href="https://noah-li2012.github.io/DonateForNoah/" target="_blank">|点我-Click me|</a></p>
 </body>
 </html>
